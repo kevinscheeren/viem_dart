@@ -1,0 +1,15 @@
+builders:
+  viem_dart_builders:
+    import: "package:viem_dart_builders/builder.dart"
+    builder_factories: ["generateAbiBuilder"]
+    # Mirrors json_serializable's/freezed's own build.yaml shape: emit into
+    # the shared `.g.part` cache extension, then let source_gen's own
+    # `combining_builder` (applied automatically via `applies_builders`
+    # below) merge every generator targeting the same library into one
+    # `.g.dart` part file — this is how @GenerateAbi coexists with
+    # @JsonSerializable/@freezed on the same `part 'foo.g.dart';` directive
+    # without a builder-output collision.
+    build_extensions: {".dart": [".g.part"]}
+    auto_apply: dependents
+    build_to: cache
+    applies_builders: ["source_gen:combining_builder"]

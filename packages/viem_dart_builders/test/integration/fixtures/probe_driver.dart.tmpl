@@ -1,0 +1,117 @@
+// The test that generated_contract_anvil_test.dart materializes next to the
+// generated `ProbeContract`/`ProbeWalletContract` (generated_probe_contract.dart)
+// and runs with `dart test`. Not compiled in place: it imports the generated
+// file, which only exists while that test runs. The anvil URL and the
+// contract's creation bytecode come in through the environment.
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:test/test.dart';
+import 'package:viem_dart/abi.dart';
+import 'package:viem_dart/accounts.dart';
+import 'package:viem_dart/chains.dart';
+import 'package:viem_dart/utils.dart';
+import 'package:viem_dart/viem_dart.dart';
+import 'package:viem_dart_test_harness/anvil_harness.dart';
+
+import 'generated_probe_contract.dart';
+
+final _nope = parseAbiItem('error Nope(uint256 code)') as AbiError;
+
+/// Runs [action], which must revert, and returns the [RpcError] it threw.
+Future<RpcError> revertOf(Future<Object?> Function() action) async {
+  try {
+    await action();
+  } on RpcError catch (error) {
+    return error;
+  }
+  fail('expected the call to revert');
+}
+
+void main() {
+  final rpcUrl = Platform.environment['PROBE_RPC_URL']!;
+  final bytecode = Platform.environment['PROBE_BYTECODE']!;
+  final transport = HttpTransport(Uri.parse(rpcUrl));
+  final client = PublicClient(transport: transport, chain: anvil);
+  final account = mnemonicToAccount(anvilDefaultMnemonic);
+  final wallet = WalletClient(
+    transport: transport,
+    chain: anvil,
+    account: account,
+  );
+  late String address;
+  late ProbeContract probe;
+  late ProbeWalletContract probeWriter;
+
+  setUpAll(() async {
+    final receipt = await client.waitForTransactionReceipt(
+      await wallet.sendTransaction(data: bytecode),
+    );
+    expect(receipt.status, 1);
+    address = receipt.contractAddress!;
+    probe = ProbeContract(client: client, address: address);
+    probeWriter = ProbeWalletContract(client: wallet, address: address);
+  });
+
+  test('a generated write is visible to the generated reads and event getter',
+      () async {
+    expect(await probe.getStored(), BigInt.zero);
+    expect(await probe.stored(), BigInt.zero);
+    expect(await probe.getPingedEvents(), isEmpty);
+
+    final hash = await probeWriter.ping(v: BigInt.from(1234));
+    final receipt = await client.waitForTransactionReceipt(hash);
+    expect(receipt.status, 1);
+
+    expect(await probe.getStored(), BigInt.from(1234));
+    expect(await probe.stored(), BigInt.from(1234));
+
+    await client.waitForTransactionReceipt(
+      await probeWriter.ping(v: BigInt.from(5678)),
+    );
+    final events = await probe.getPingedEvents();
+    expect(events.map((e) => e.value), [BigInt.from(1234), BigInt.from(5678)]);
+    expect(events.map((e) => e.who.toLowerCase()).toSet(), {
+      account.address.toLowerCase(),
+    });
+
+    // The indexed `who` is a typed filter.
+    expect(await probe.getPingedEvents(who: account.address), hasLength(2));
+    expect(
+      await probe.getPingedEvents(
+        who: '0x0000000000000000000000000000000000000001',
+      ),
+      isEmpty,
+    );
+  });
+
+  test('a generated read at an earlier block sees the earlier state',
+      () async {
+    final before = await client.getBlockNumber();
+    await client.waitForTransactionReceipt(
+      await probeWriter.ping(v: BigInt.from(99)),
+    );
+    expect(await probe.getStored(), BigInt.from(99));
+    expect(await probe.getStored(blockNumber: before), isNot(BigInt.from(99)));
+  });
+
+  test('a generated read surfaces a custom error and a revert reason', () async {
+    final custom = await revertOf(() => probe.failWithCustom());
+    expect(decodeErrorResult(_nope, hexToBytes(custom.data! as String)), [
+      BigInt.from(42),
+    ]);
+
+    final reason = await revertOf(() => probe.failWithReason());
+    final reasonData = hexToBytes(reason.data! as String);
+    expect(
+      bytesToHex(Uint8List.sublistView(reasonData, 0, 4)),
+      '0x08c379a0',
+    );
+    expect(
+      decodeAbiParameters(const [
+        AbiParameter(name: '', type: 'string'),
+      ], Uint8List.sublistView(reasonData, 4)),
+      ['boom'],
+    );
+  });
+}

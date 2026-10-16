@@ -1,0 +1,26 @@
+#!/bin/sh
+# Fast pre-commit gate: format check + analyze.
+#
+# The full gate (`melos run check`, which also runs tests) runs in CI. This
+# keeps commits fast but formatted and analysis-clean. Bypass in a pinch with
+# `git commit --no-verify`.
+#
+# Enabled per clone via `git config core.hooksPath .githooks`.
+
+if ! command -v melos >/dev/null 2>&1; then
+  echo "pre-commit: melos not on PATH — skipping format/analyze gate." >&2
+  echo "  Install: dart pub global activate melos" >&2
+  exit 0
+fi
+
+echo "pre-commit: melos run format:check"
+if ! melos run format:check; then
+  echo "✖ Unformatted Dart. Run \`melos run format\` and re-stage." >&2
+  exit 1
+fi
+
+echo "pre-commit: melos run analyze"
+if ! melos run analyze; then
+  echo "✖ Analysis issues. Fix them (or \`git commit --no-verify\` to bypass)." >&2
+  exit 1
+fi

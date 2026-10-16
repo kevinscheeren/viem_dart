@@ -1,0 +1,16 @@
+name: viem_dart_tooling
+description: >-
+  Internal release and compliance tooling for the viem_dart workspace: the
+  dependency licence gate, the CycloneDX SBOM and the third-party licence
+  bundle. Not published.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+resolution: workspace
+
+dev_dependencies:
+  lints: ^6.1.0
+  test: ^1.31.2

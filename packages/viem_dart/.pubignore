@@ -1,0 +1,10 @@
+# Vendored ENSIP-15 conformance suite (37,484 cases, ~10MB) — only needed to
+# run test/ens/normalize_test.dart locally/in CI, never imported by
+# published code. Excluding it from the published archive keeps `pub get`
+# lean for consumers; see test/fixtures/ensip15/ATTRIBUTION.md for
+# provenance if you need to fetch it yourself.
+test/fixtures/ensip15/ens-normalize-tests.json
+
+# Anvil-backed integration tests: they need Foundry and, for the Safe tests, a
+# network fork of Base, so nobody can run them from a downloaded package.
+test/integration/

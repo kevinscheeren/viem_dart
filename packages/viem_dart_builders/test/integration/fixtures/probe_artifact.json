@@ -1,0 +1,89 @@
+{
+  "contract": "Probe",
+  "abi": [
+    {
+      "type": "function",
+      "name": "failWithCustom",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "failWithReason",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "getStored",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "ping",
+      "inputs": [
+        {
+          "name": "v",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "stored",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "Pinged",
+      "inputs": [
+        {
+          "name": "who",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "value",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "Nope",
+      "inputs": [
+        {
+          "name": "code",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ]
+    }
+  ],
+  "bytecode": "0x6080806040523461001657610125908161001c8239f35b600080fdfe608080604052600436101561001357600080fd5b600090813560e01c908163773acdef146100dd57508063e1f7ec5a146100c0578063e582dd31146100c0578063e7cb5232146100845763f89aef451461005857600080fd5b346100815780600319360112610081576040516363a2a81f60e01b8152602a6004820152602490fd5b80fd5b5034610081578060031936011261008157606460405162461bcd60e51b8152602060048201526004602482015263626f6f6d60e01b6044820152fd5b503461008157806003193601126100815760209054604051908152f35b9050346101215760203660031901126101215760043580835581527f78a327424158f99dcde9deeb550e97c0f1d53b23ebaec3ac54a53f58504b3c8560203392a280f35b5080fd"
+}

@@ -1,0 +1,35 @@
+name: viem_dart
+description: >-
+  A from-scratch, pure-Dart port of viem — a composable transport/chain/account/client
+  model for interacting with EVM chains from server-side Dart, Flutter, and Jaspr.
+version: 0.1.0
+repository: https://github.com/kevinscheeren/viem_dart
+issue_tracker: https://github.com/kevinscheeren/viem_dart/issues
+topics:
+  - ethereum
+  - web3
+  - evm
+  - blockchain
+
+environment:
+  sdk: ^3.12.2
+
+resolution: workspace
+
+dependencies:
+  blockchain_utils: ^7.1.0
+  freezed_annotation: ^3.1.0
+  http: ^1.6.0
+  json_annotation: ^4.12.0
+  pointycastle: ^4.0.0
+  tuple: ^2.0.2
+  unorm_dart: ^0.3.2
+  web_socket_channel: ^3.0.3
+
+dev_dependencies:
+  build_runner: ^2.16.0
+  freezed: ^4.0.0-dev.3
+  json_serializable: ^6.14.1
+  lints: ^6.1.0
+  test: ^1.31.2
+  viem_dart_test_harness: ^0.0.1

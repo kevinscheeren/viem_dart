@@ -1,0 +1,3 @@
+tags:
+  integration:
+    description: Spawns a real anvil process (via viem_dart_test_harness) — requires Foundry on PATH.

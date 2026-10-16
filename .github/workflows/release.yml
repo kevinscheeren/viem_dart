@@ -1,0 +1,76 @@
+# Tags a release, and nothing else. Nothing versions or tags on a push, and
+# nothing is published to pub.dev (or anywhere else).
+#
+# The flow (docs/release.md, "Cutting a release"):
+#   1. `release/<pkg>-vX.Y.Z` is cut from `development`; `melos version` bumps the
+#      version and the CHANGELOG there, by hand, without tagging.
+#   2. The release pull request passes the security gate and merges into
+#      `production` with a merge commit.
+#   3. A maintainer runs this workflow on `production`. It creates the tag
+#      `<pkg>-vX.Y.Z` on the merged commit, and only if the merge really carried
+#      that version. Then `production` is back-merged into `development`.
+#
+# It is a manual `workflow_dispatch` on purpose: a push-triggered tagger would have
+# to guess from the merge commit which branch was merged, and would never tag a
+# `hotfix/*`. The dispatch is the one place a tag is created.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to tag (its directory under packages/)
+        required: true
+        default: viem_dart
+        type: string
+      version:
+        description: Version to tag, X.Y.Z (must match the package's pubspec.yaml on production)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  tag:
+    # The only job that writes: it pushes the tag.
+    permissions:
+      contents: write
+    if: github.repository == 'kevinscheeren/viem_dart' && github.ref == 'refs/heads/production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: production
+          fetch-depth: 0
+      - name: Check the merged release carries this version
+        env:
+          PACKAGE: ${{ inputs.package }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -eu
+          printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' \
+            || { echo "version must be X.Y.Z, got '$VERSION'" >&2; exit 1; }
+          printf '%s' "$PACKAGE" | grep -Eq '^[a-z][a-z0-9_]*$' \
+            || { echo "package must be a directory name under packages/, got '$PACKAGE'" >&2; exit 1; }
+          dir="packages/$PACKAGE"
+          [ -f "$dir/pubspec.yaml" ] || { echo "$dir/pubspec.yaml not found" >&2; exit 1; }
+          found="$(sed -n 's/^version: *//p' "$dir/pubspec.yaml" | head -n1)"
+          [ "$found" = "$VERSION" ] \
+            || { echo "$dir/pubspec.yaml says '$found', not '$VERSION': the release branch did not merge" >&2; exit 1; }
+          grep -q "^## $VERSION\$" "$dir/CHANGELOG.md" \
+            || { echo "$dir/CHANGELOG.md has no '## $VERSION' entry" >&2; exit 1; }
+          if git rev-parse -q --verify "refs/tags/$PACKAGE-v$VERSION" >/dev/null; then
+            echo "tag $PACKAGE-v$VERSION already exists" >&2
+            exit 1
+          fi
+      - name: Create and push the tag
+        env:
+          TAG: ${{ inputs.package }}-v${{ inputs.version }}
+        run: |
+          set -eu
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "$TAG" HEAD
+          git push origin "refs/tags/$TAG"

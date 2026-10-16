@@ -1,0 +1,29 @@
+#!/bin/sh
+# Conventional Commits gate (https://www.conventionalcommits.org/).
+#
+# Enable once per clone: git config core.hooksPath .githooks
+#
+# Commit subjects drive automatic semver — `melos version` parses them to decide
+# viem_dart's version bump and changelog entries — so a non-conforming subject
+# is rejected to keep history machine-readable. Pure POSIX sh + grep.
+
+msg_file="$1"
+subject="$(head -n1 "$msg_file")"
+
+# Let git's own machinery and rebase helpers through untouched.
+case "$subject" in
+  "Merge "* | "Revert "* | "fixup! "* | "squash! "* | "amend! "*) exit 0 ;;
+esac
+
+# <type>[optional (scope)][optional !]: <description>
+pattern='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|security)(\([a-z0-9_.-]+\))?(!)?: .+'
+if printf '%s' "$subject" | grep -Eq "$pattern"; then
+  exit 0
+fi
+
+echo "✖ Commit message doesn't follow Conventional Commits." >&2
+echo "  Expected: <type>[optional scope][!]: <description>" >&2
+echo "  Types:    feat fix docs style refactor perf test build ci chore revert security" >&2
+echo "  Example:  feat(abi): add human-readable ABI parser" >&2
+echo "  Yours:    $subject" >&2
+exit 1

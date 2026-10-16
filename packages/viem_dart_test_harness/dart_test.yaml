@@ -1,0 +1,3 @@
+tags:
+  integration:
+    description: Spawns a real anvil process — requires Foundry on PATH.

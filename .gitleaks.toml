@@ -1,0 +1,155 @@
+# The secrets-scan config, run by `tool/secrets_scan.sh` over the git history reachable
+# from HEAD (merge commits included) and the working tree, in CI (`secrets-scan` job) and before a
+# release. The scan is gitleaks (MIT), pinned and sha256-verified by `tool/install_gitleaks.sh`.
+#
+# What it proves: this repository holds no key, seed or secret of ours. The default gitleaks
+# rules stay on (`useDefault`); the rules below add the Ethereum-specific shapes they do not
+# know: a 64-hex-character string (the shape of a private key), a BIP-39 mnemonic and an RPC URL
+# with the key inside it.
+#
+# Allowlist rule: an entry names exact files (`^path$`, every dot escaped) or one exact public
+# value, and says why it is public. Never a directory, never a glob, never a pattern wider than
+# one value, so a private-key-shaped string anywhere else still fails. To allow a new public
+# value, add an entry with its reason and have it reviewed; do not widen an existing one.
+# `gitleaks:allow` comments are ignored on purpose (the scan passes `--ignore-gitleaks-allow`),
+# so the allowlist stays the one place.
+
+title = "viem_dart secrets scan"
+
+[extend]
+useDefault = true
+
+# A bytes32 value, a transaction hash, a typehash, a code hash and a SHA-256 pin look the same
+# as a private key, so every file that legitimately holds one is an allowlist entry below.
+[[rules]]
+id = "eth-private-key"
+description = "64 hex characters (an Ethereum private key, or a hash that needs an allowlist entry)"
+regex = '''(?i)(?:^|[^0-9a-f])((?:0x)?[0-9a-f]{64})(?:$|[^0-9a-f])'''
+secretGroup = 1
+tags = ["ethereum", "private-key"]
+
+[[rules]]
+id = "bip39-mnemonic-quoted"
+description = "A quoted string of 12 to 24 lowercase words (a BIP-39 mnemonic)"
+regex = '''["'`]((?:[a-z]{3,8} ){11,23}[a-z]{3,8})["'`]'''
+secretGroup = 1
+tags = ["ethereum", "mnemonic"]
+
+[[rules]]
+id = "bip39-mnemonic-keyword"
+description = "12 to 24 lowercase words after the word mnemonic, seed phrase or recovery phrase"
+regex = '''(?i)(?:mnemonic|seed[ _-]?phrase|recovery[ _-]?phrase)\W{0,12}((?:[a-z]{3,8} ){11,23}[a-z]{3,8})'''
+secretGroup = 1
+keywords = ["mnemonic", "seed", "recovery"]
+tags = ["ethereum", "mnemonic"]
+
+[[rules]]
+id = "url-with-path-key"
+description = "A URL whose first path segment is a long token (an RPC provider API key)"
+regex = '''(?i)https?://[a-z0-9.-]+(?::[0-9]+)?/(?:v[0-9]+/|ogrpc/|rpc/)?([a-z0-9_]{24,64})(?:[/?#"'`\s]|$)'''
+secretGroup = 1
+entropy = 3.2
+keywords = ["http"]
+tags = ["ethereum", "rpc", "api-key"]
+
+[[rules]]
+id = "url-with-query-key"
+description = "A URL with an API key, token or secret in a query parameter"
+regex = '''(?i)https?://[^\s"'`<>]*[?&](?:api[_-]?key|apikey|dkey|key|access[_-]?token|token|auth|secret)=([a-z0-9_.-]{16,})'''
+secretGroup = 1
+entropy = 3.0
+keywords = ["http"]
+tags = ["ethereum", "rpc", "api-key"]
+
+[[rules]]
+id = "url-with-userinfo-password"
+description = "A URL with a password in its user-info part"
+regex = '''(?i)https?://[^\s/:@"'`<>]+:([^\s/@"'`<>]{6,})@[a-z0-9.-]+'''
+secretGroup = 1
+entropy = 2.5
+keywords = ["http"]
+tags = ["rpc", "password"]
+
+# ---- allowlist ----------------------------------------------------------------------------------
+
+[[allowlists]]
+description = "the public Anvil/Hardhat account #0 key (derived from the public `test ... junk` mnemonic), a published test vector used by the signing tests"
+regexes = ['''(?i)^(?:0x)?ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80$''']
+targetRules = ["eth-private-key"]
+
+[[allowlists]]
+description = "the public Anvil/Hardhat mnemonic, a published test vector"
+regexes = ['''^test test test test test test test test test test test junk$''']
+targetRules = ["bip39-mnemonic-quoted", "bip39-mnemonic-keyword"]
+
+[[allowlists]]
+description = "20-byte public contract addresses, flagged as keys by the generic rule"
+regexes = ['''(?i)^(?:0x)?[0-9a-f]{40}$''']
+targetRules = ["generic-api-key"]
+
+[[allowlists]]
+description = "public Arweave transaction ids in ENS avatar URI fixtures"
+paths = ['''^packages/viem_dart/test/ens/avatar_uri_test\.dart$''']
+targetRules = ["url-with-path-key"]
+
+[[allowlists]]
+description = "SHA-256 archive hashes of published pub.dev packages"
+paths = ['''^pubspec\.lock$''']
+targetRules = ["eth-private-key"]
+
+[[allowlists]]
+description = "the pinned SHA-256 of the gitleaks release tarballs and of the CycloneDX schema files, public values from their release pages, and the Anvil account #0 key regex above"
+paths = ['''^tool/install_gitleaks\.sh$''', '''^tool/validate_sbom\.sh$''', '''^\.gitleaks\.toml$''']
+targetRules = ["eth-private-key"]
+
+[[allowlists]]
+description = "test vectors with made-up, low-entropy signing keys (EIP-155 worked example and similar) and the signatures, hashes and RLP they produce: public values from the EIPs and independent recomputation, no real key"
+paths = [
+  '''^packages/viem_dart/test/transactions/eip1559_transaction_test\.dart$''',
+  '''^packages/viem_dart/test/transactions/eip2930_transaction_test\.dart$''',
+  '''^packages/viem_dart/test/transactions/eip4844_transaction_test\.dart$''',
+  '''^packages/viem_dart/test/transactions/eip7702_transaction_test\.dart$''',
+  '''^packages/viem_dart/test/transactions/legacy_transaction_test\.dart$''',
+  '''^packages/viem_dart/test/transactions/recover_transaction_address_test\.dart$''',
+]
+targetRules = ["eth-private-key"]
+
+[[allowlists]]
+description = "bytes32 test vectors: hashes, topics, storage slots, namehashes, type hashes, code hashes and ABI words, all public values (several are the expected output of a function under test)"
+paths = [
+  '''^packages/viem_dart/lib/src/actions/public/verify_hash_actions\.dart$''',
+  '''^packages/viem_dart/test/abi/encode_decode_parameters_test\.dart$''',
+  '''^packages/viem_dart/test/abi/event_log_test\.dart$''',
+  '''^packages/viem_dart/test/accounts/private_key_to_account_test\.dart$''',
+  '''^packages/viem_dart/test/accounts/sign_message_test\.dart$''',
+  '''^packages/viem_dart/test/accounts/sign_typed_data_test\.dart$''',
+  '''^packages/viem_dart/test/accounts/verify_recover_message_test\.dart$''',
+  '''^packages/viem_dart/test/accounts/verify_recover_typed_data_test\.dart$''',
+  '''^packages/viem_dart/test/actions/public/contract_actions_test\.dart$''',
+  '''^packages/viem_dart/test/actions/public/state_actions_test\.dart$''',
+  '''^packages/viem_dart/test/actions/public/verify_hash_actions_test\.dart$''',
+  '''^packages/viem_dart/test/actions/state_override_test\.dart$''',
+  '''^packages/viem_dart/test/actions/test/anvil_snapshot_time_actions_test\.dart$''',
+  '''^packages/viem_dart/test/actions/test/anvil_state_actions_test\.dart$''',
+  '''^packages/viem_dart/test/client/block_test\.dart$''',
+  '''^packages/viem_dart/test/client/transaction_receipt_test\.dart$''',
+  '''^packages/viem_dart/test/client/transaction_test\.dart$''',
+  '''^packages/viem_dart/test/contract/contract_test\.dart$''',
+  '''^packages/viem_dart/test/crypto/keccak_test\.dart$''',
+  '''^packages/viem_dart/test/crypto/secp256k1_test\.dart$''',
+  '''^packages/viem_dart/test/ens/namehash_test\.dart$''',
+  '''^packages/viem_dart/test/integration/fixtures/safe/README\.md$''',
+  '''^packages/viem_dart/test/integration/fixtures/safe/base_fork\.dart$''',
+  '''^packages/viem_dart/test/integration/fixtures/safe/safe_artifacts\.dart$''',
+  '''^packages/viem_dart/test/integration/sdk_capabilities_test\.dart$''',
+  '''^packages/viem_dart/test/integration/state_override_anvil_test\.dart$''',
+  '''^packages/viem_dart/test/siwe/verify_siwe_message_client_test\.dart$''',
+  '''^packages/viem_dart/test/siwe/verify_siwe_message_test\.dart$''',
+  '''^packages/viem_dart/test/utils/contract_address_test\.dart$''',
+]
+targetRules = ["eth-private-key"]
+
+[[allowlists]]
+description = "the ENSIP-15 conformance suite (adraffy/ens-normalize.js): name-normalisation cases, some of which contain 64-hex-character labels"
+paths = ['''^packages/viem_dart/test/fixtures/ensip15/ens-normalize-tests\.json$''']
+targetRules = ["eth-private-key"]

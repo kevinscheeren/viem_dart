@@ -1,0 +1,27 @@
+# This is a Dart melos workspace at the root. Generated codegen files
+# (*.g.dart, *.freezed.dart) are committed, not ignored.
+
+# Melos / Dart workspace
+.dart_tool/
+.melos_tool/
+pubspec_overrides.yaml
+build/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Generated coverage
+coverage/
+
+# Generated dartdoc output (`dart doc`)
+doc/api/
+
+# anvil test-harness scratch state
+/.anvil_e2e/
+
+# viem_dart_builders' own tests materialize generated code here to run a
+# real `dart analyze` over it (package-local so `package:viem_dart/...`
+# imports resolve) — cleaned up via addTearDown, ignored as a backstop.
+packages/viem_dart_builders/test/.generated_probe/

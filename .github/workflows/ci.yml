@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [development, production]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Unit tests, lint, format
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+      - name: Activate melos
+        run: dart pub global activate melos 8.2.2
+      - name: Bootstrap workspace
+        run: melos bootstrap
+      - name: Run check gate
+        run: melos run check
+
+  secrets-scan:
+    name: Secrets scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The scan reads the history reachable from HEAD, so no shallow clone.
+          fetch-depth: 0
+      - name: Scan history and tree for secrets
+        run: sh tool/secrets_scan.sh
+      - name: Prove the scan fails a planted key (deliberate break)
+        run: sh tool/secrets_scan_probe.sh
+
+  release-artifacts:
+    name: SBOM and licence bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+      - name: Activate melos
+        run: dart pub global activate melos 8.2.2
+      - name: Bootstrap workspace
+        run: melos bootstrap
+      - name: Generate and validate the SBOM and the licence bundle
+        run: melos run release:artifacts
+
+  pub-score:
+    name: pub.dev dry run and pana
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+      - name: Activate melos and pana
+        run: |
+          dart pub global activate melos 8.2.2
+          dart pub global activate pana 0.23.19
+      - name: Bootstrap workspace
+        run: melos bootstrap
+      - name: Publish dry run (never publishes)
+        working-directory: packages/viem_dart
+        run: dart pub publish --dry-run
+      - name: pana (fails if any point is lost)
+        run: pana --no-warning --exit-code-threshold 0 packages/viem_dart
+
+  flutter-build-proof:
+    name: Flutter example web/wasm build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+      - name: Activate melos
+        run: dart pub global activate melos 8.2.2
+      - name: Bootstrap workspace
+        run: melos bootstrap
+      - name: Web/wasm compile smoke check
+        # Always runs, independent of the Flutter example below —
+        # verifies packages/viem_dart's own public API surface compiles
+        # for web/wasm (catches a stray dart:io import etc.) without
+        # waiting on the Flutter example below.
+        # See tool/web_compile_probe.dart's doc comment.
+        working-directory: packages/viem_dart
+        run: |
+          dart compile js tool/web_compile_probe.dart -o /tmp/probe.js
+          dart compile wasm tool/web_compile_probe.dart -o /tmp/probe.wasm
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+      - name: flutter_example — analyze, test, build web (wasm)
+        working-directory: examples/flutter_example
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+          flutter build web --wasm
+
+  jaspr-build-proof:
+    name: Jaspr example JS/Wasm build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+      - name: jaspr_example — analyze, compile JS + Wasm
+        working-directory: examples/jaspr_example
+        run: |
+          dart pub get
+          dart analyze
+          dart compile js lib/main.client.dart -o /tmp/jaspr_probe.js
+          dart compile wasm lib/main.client.dart -o /tmp/jaspr_probe.wasm
+
+  anvil-integration:
+    name: Anvil integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+      - uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1.9.1
+        with:
+          version: v1.8.4
+      - name: Activate melos
+        run: dart pub global activate melos 8.2.2
+      - name: Bootstrap workspace
+        run: melos bootstrap
+      - name: Run integration tests
+        # The Safe tests fork Base at a pinned block (see
+        # packages/viem_dart/test/integration/fixtures/safe/README.md): a
+        # keyless public endpoint, no secret.
+        env:
+          BASE_FORK_URL: https://mainnet.base.org
+        run: melos run test:integration

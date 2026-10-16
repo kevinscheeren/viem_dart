@@ -1,0 +1,17 @@
+name: viem_dart_test_harness
+description: >-
+  Internal-only test harness that spawns and manages a local `anvil` (Foundry)
+  process for viem_dart's integration test suite. Not published.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+resolution: workspace
+
+dependencies:
+  viem_dart: ^0.1.0
+
+dev_dependencies:
+  test: ^1.31.2

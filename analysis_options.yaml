@@ -1,0 +1,11 @@
+include: package:lints/recommended.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  exclude:
+    # Vendored third-party code (see ATTRIBUTION.md alongside it) — not
+    # ours to lint or reformat.
+    - "packages/viem_dart/lib/src/ens/vendor/**"

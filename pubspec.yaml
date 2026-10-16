@@ -1,0 +1,75 @@
+name: viem_dart_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+workspace:
+  - packages/viem_dart
+  - packages/viem_dart_builders
+  - packages/viem_dart_test_harness
+  - packages/viem_dart_tooling
+  - examples/cli_example
+
+dev_dependencies:
+  melos: ^8.2.2
+
+melos:
+  ide:
+    intellij:
+      enabled: false
+  command:
+    version:
+      workspaceChangelog: true
+      includeScopes: true
+      fetchTags: false
+      message: "chore(release): version packages"
+  scripts:
+    analyze:
+      run: melos exec -c 1 -- dart analyze --fatal-infos
+      description: Analyze all packages.
+    format:
+      run: melos exec -c 1 -- dart format .
+      description: Format all packages.
+    format:check:
+      run: melos exec -c 1 -- dart format --output=none --set-exit-if-changed .
+      description: Check formatting without writing changes.
+    test:dart:
+      run: melos exec -c 1 --dir-exists=test -- dart test --exclude-tags=integration --reporter=failures-only
+      description: Run unit tests in packages with a test/ directory (excludes anvil-backed integration tests, tagged 'integration' — see test:integration).
+    test:
+      run: melos run test:dart
+      description: Run unit tests.
+    test:integration:
+      run: melos exec -c 1 --dir-exists=test/integration -- dart test test/integration --reporter=failures-only
+      description: Run anvil-backed integration tests.
+    check:docs:
+      run: sh tool/check_security_docs.sh
+      description: Fail if SECURITY.md and the vulnerability policy drift from the agreed reporting terms.
+    check:licences:
+      run: melos exec -c 1 --scope=viem_dart_tooling -- dart run bin/licence_check.dart
+      description: Dependency licence gate - every hosted package in pubspec.lock must carry an allowed licence. Needs `melos bootstrap`.
+    secrets:scan:
+      run: sh tool/secrets_scan.sh
+      description: gitleaks over the whole git history and the committed tree. Downloads the pinned, sha256-verified gitleaks on first use.
+    secrets:probe:
+      run: sh tool/secrets_scan_probe.sh
+      description: Deliberate-break proof that the secrets scan fails a planted key, mnemonic and RPC URL.
+    sbom:
+      run: melos exec -c 1 --scope=viem_dart_tooling -- dart run bin/sbom.dart
+      description: Write the CycloneDX SBOM of viem_dart's runtime closure to build/release/sbom.cdx.json.
+    licence-bundle:
+      run: melos exec -c 1 --scope=viem_dart_tooling -- dart run bin/licence_bundle.dart
+      description: Write the third-party licence bundle (notices plus every runtime dependency's licence text) to build/release/THIRD_PARTY_LICENSES.
+    release:artifacts:
+      run: melos run sbom && melos run licence-bundle && sh tool/validate_sbom.sh build/release/sbom.cdx.json
+      description: Generate the SBOM and the licence bundle and validate the SBOM against the CycloneDX 1.6 schema. Needs python3 and network access for the schema.
+    check:
+      run: melos run check:docs && melos run check:licences && melos run format:check && melos run analyze && melos run test:dart
+      description: Full local/CI gate (secrets:scan and secrets:probe run in their own CI job).
+    coverage:
+      run: melos exec --dir-exists=test -- dart test --coverage=coverage
+      description: Run tests with coverage collection.
+    build_runner:
+      run: melos exec -c 1 --depends-on=build_runner -- dart run build_runner build
+      description: Run codegen (freezed/json_serializable) in packages that depend on build_runner.

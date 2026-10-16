@@ -1,0 +1,23 @@
+name: jaspr_example
+description: >-
+  A Jaspr client app demoing viem_dart: proves it compiles to JS/Wasm with
+  zero reachable dart:io, and reads a live ETH balance in the browser.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  jaspr: ^0.23.2
+  viem_dart:
+    path: ../../packages/viem_dart
+
+dev_dependencies:
+  build_runner: ^2.10.0
+  build_web_compilers: ^4.8.0
+  jaspr_builder: ^0.23.2
+  lints: ^6.0.0
+
+jaspr:
+  mode: client

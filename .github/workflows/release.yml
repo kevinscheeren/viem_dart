@@ -36,7 +36,7 @@ jobs:
     # The only job that writes: it pushes the tag.
     permissions:
       contents: write
-    if: github.repository == 'kevinscheeren/viem_dart' && github.ref == 'refs/heads/production'
+    if: github.repository == 'wearenotabank/viem_dart' && github.ref == 'refs/heads/production'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

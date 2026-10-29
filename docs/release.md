@@ -55,4 +55,23 @@ Nothing versions or tags on a push. The steps, in order:
 4. **Tag on `production`**: run the `Release` workflow (Actions, "Run workflow", branch `production`) with the package and `X.Y.Z`. It checks that `production` carries that version and changelog entry, then creates the tag `viem_dart-vX.Y.Z`. Only this workflow creates tags.
 5. **Back-merge** `production` into `development` (a pull request).
 
-A bug found while gating is fixed on the release branch if small; if it is structural, delete the release branch, fix on `development` and re-cut. A `hotfix/*` branch (from `production`, with a patch bump) merges into `production` and `development` and is tagged the same way. Publishing to pub.dev is a separate, manual step that is not part of this flow.
+A bug found while gating is fixed on the release branch if small; if it is structural, delete the release branch, fix on `development` and re-cut. A `hotfix/*` branch (from `production`, with a patch bump) merges into `production` and `development` and is tagged the same way. Publishing to pub.dev is a separate, manual step that is not part of this flow; see "Publishing to pub.dev".
+
+## Publishing to pub.dev
+
+`viem_dart` is published through the verified publisher **`cubealgos.de`** (Cube Algos UG), never as an uploader-only package. Decided 2026-10-29:
+
+- The version is `0.2.0`, the first on pub.dev. A 0.x version carries no stability promise.
+- Package names stay neutral: `viem_dart` keeps its name and no brand goes into a package name, because a pub.dev name is permanent. The organisation and publisher names do not appear in any package name.
+- The licence is MIT, copyright Cube Algos UG (haftungsbeschränkt). `LICENSE` (root, and the identical copy in `packages/viem_dart/` that the archive ships) also keeps viem's `Copyright (c) 2023-present weth, LLC`, and `THIRD_PARTY_NOTICES.md` reproduces viem's full permission notice. `packages/viem_dart_tooling/test/repo_licence_test.dart` pins all of it.
+
+Nothing in this repository publishes, and no agent publishes. The steps below are the account owner's, in this order, after the release pull request is merged and the tag exists (steps 3 to 5 of "Cutting a release"):
+
+- [ ] Verify the domain `cubealgos.de` in [Google Search Console](https://search.google.com/search-console) with the Google account that will own the publisher (a DNS TXT record on the domain).
+- [ ] On pub.dev, create the verified publisher `cubealgos.de` ("Create publisher") and confirm it shows the verified badge.
+- [ ] Run `dart pub publish --dry-run` in `packages/viem_dart` on the tagged commit; it must report 0 warnings.
+- [ ] Run `dart pub publish` in `packages/viem_dart` on the tagged commit (the first upload goes to the uploading account).
+- [ ] On the package's Admin tab on pub.dev, "Transfer to publisher": `cubealgos.de`. Check the package page shows the publisher and the `0.2.0` version, the MIT licence and the `wearenotabank/viem_dart` repository link.
+- [ ] Update `README.md` ("not yet published to pub.dev") and `docs/release.md` if anything above turned out differently.
+
+Only `packages/viem_dart` is published. `viem_dart_builders`, `viem_dart_test_harness`, `viem_dart_tooling` and the examples are `publish_to: none` and ship no `LICENSE`.

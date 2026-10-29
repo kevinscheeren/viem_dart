@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 0.2.0
+
+First release published to pub.dev, through the verified publisher
+`cubealgos.de` (Cube Algos UG). A 0.x version carries no stability promise.
+No API change since 0.1.0.
+
+- Licence: MIT, copyright Cube Algos UG (haftungsbeschränkt), with viem's
+  copyright and permission notice (MIT, wevm) kept in `LICENSE` and
+  `THIRD_PARTY_NOTICES.md`. Before this, `LICENSE` named "The viem_dart
+  authors".
+- The repository moved to `wearenotabank/viem_dart`; `repository` and
+  `issue_tracker` point there.
+
 ## 0.1.0
 
 First release. Nothing was published or tagged before it.

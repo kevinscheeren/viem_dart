@@ -5,6 +5,27 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## Unreleased
 
+## 2026-10-29
+
+### Changes
+
+---
+
+Packages with breaking changes:
+
+ - There are no breaking changes in this release.
+
+Packages with other changes:
+
+ - [`viem_dart` - `v0.2.0`](#viem_dart---v020)
+
+---
+
+#### `viem_dart` - `v0.2.0`
+
+ - **CHORE**(release): first release to pub.dev, via the verified publisher `cubealgos.de`; licence holder is Cube Algos UG (haftungsbeschränkt), viem's MIT notice kept.
+ - **CHORE**(repo): point references at wearenotabank/viem_dart.
+
 ## 2026-10-05
 
 ### Changes

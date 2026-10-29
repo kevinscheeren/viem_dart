@@ -11,7 +11,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for the branching and commit workflow.
 
 ## Status
 
-Pre-1.0 and under active development: the current version is `0.1.0`, and
+Pre-1.0 and under active development: the current version is `0.2.0`, and
 `viem_dart` is not yet published to pub.dev. Expect API changes before `1.0.0`. The public surface follows viem's, so
 [viem's documentation](https://viem.sh) is the best reference for how an
 action or utility is meant to behave.

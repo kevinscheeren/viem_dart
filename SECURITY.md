@@ -2,8 +2,8 @@
 
 This policy covers `viem_dart`: the Dart package in `packages/viem_dart/` (signing, hashing,
 encoding and decoding for EVM wallets and clients) and the code generator in
-`packages/viem_dart_builders/`. It is a personal open-source library under the MIT licence,
-maintained by [@kevinscheeren](https://github.com/kevinscheeren).
+`packages/viem_dart_builders/`. It is an open-source library under the MIT licence,
+maintained by the [wearenotabank](https://github.com/wearenotabank) organisation.
 
 ## Supported versions
 
@@ -20,7 +20,7 @@ second one exists, only that release and the latest commit on `development` are 
 ## Report a vulnerability privately
 
 **Use GitHub private vulnerability reporting.** On the repository's **Security** tab, choose
-**Report a vulnerability** (<https://github.com/kevinscheeren/viem_dart/security/advisories/new>).
+**Report a vulnerability** (<https://github.com/wearenotabank/viem_dart/security/advisories/new>).
 The report is visible only to the maintainer, and a fix can be prepared in a private fork before
 it is disclosed.
 

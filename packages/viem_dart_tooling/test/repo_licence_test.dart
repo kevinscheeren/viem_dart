@@ -4,17 +4,23 @@ import 'package:test/test.dart';
 import 'package:viem_dart_tooling/src/licence_policy.dart';
 import 'package:viem_dart_tooling/src/workspace.dart';
 
-/// The repository's own licence files: viem_dart is MIT, held by its author,
+/// The repository's own licence files: viem_dart is MIT, held by Cube Algos UG,
 /// and every directory that carries third-party material says so in
 /// `THIRD_PARTY_NOTICES.md` with the upstream licence text.
 void main() {
   final root = findWorkspaceRoot(Directory.current);
   String read(String path) => File('${root.path}/$path').readAsStringSync();
 
-  test('LICENSE is the MIT licence, held by the author', () {
+  test('LICENSE is the MIT licence, held by Cube Algos UG and viem', () {
     final licence = read('LICENSE');
     expect(classifyLicenceText(licence), {'MIT'});
-    expect(licence, contains('Copyright (c) 2026 The viem_dart authors'));
+    expect(
+      licence,
+      contains('Copyright (c) 2026 Cube Algos UG (haftungsbeschränkt)'),
+    );
+    expect(licence, isNot(contains('The viem_dart authors')));
+    // viem is ported, so its notice stays next to ours.
+    expect(licence, contains('Copyright (c) 2023-present weth, LLC'));
   });
 
   test(

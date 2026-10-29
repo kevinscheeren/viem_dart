@@ -2,9 +2,9 @@ name: viem_dart
 description: >-
   A from-scratch, pure-Dart port of viem — a composable transport/chain/account/client
   model for interacting with EVM chains from server-side Dart, Flutter, and Jaspr.
-version: 0.1.0
-repository: https://github.com/kevinscheeren/viem_dart
-issue_tracker: https://github.com/kevinscheeren/viem_dart/issues
+version: 0.2.0
+repository: https://github.com/wearenotabank/viem_dart
+issue_tracker: https://github.com/wearenotabank/viem_dart/issues
 topics:
   - ethereum
   - web3

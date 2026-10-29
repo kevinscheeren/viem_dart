@@ -5,11 +5,13 @@ transport/chain/account/client model for interacting with EVM chains.
 Usable identically from a Dart server/CLI, Flutter (mobile/desktop/web), and
 [Jaspr](https://docs.jaspr.site) (web/wasm).
 
+This repository belongs to the developer organisation wearenotabank. It is not a bank: nothing here takes deposits, grants credit or holds anyone else's funds.
+
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the branching and commit workflow.
 
 ## Status
 
-Pre-1.0 and under active development: the current version is `0.1.0`, and
+Pre-1.0 and under active development: the current version is `0.2.0`, and
 `viem_dart` is not yet published to pub.dev. Expect API changes before `1.0.0`. The public surface follows viem's, so
 [viem's documentation](https://viem.sh) is the best reference for how an
 action or utility is meant to behave.
@@ -18,7 +20,7 @@ action or utility is meant to behave.
 
 **This GitHub repository is the source of truth** for the code, issues and
 releases. Report bugs and request features in the
-[issue tracker](https://github.com/kevinscheeren/viem_dart/issues); see
+[issue tracker](https://github.com/wearenotabank/viem_dart/issues); see
 [CONTRIBUTING.md](./CONTRIBUTING.md) for how branches and pull requests work.
 
 ## Security

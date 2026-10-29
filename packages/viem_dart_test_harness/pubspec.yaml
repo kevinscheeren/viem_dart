@@ -11,7 +11,7 @@ environment:
 resolution: workspace
 
 dependencies:
-  viem_dart: ^0.1.0
+  viem_dart: ^0.2.0
 
 dev_dependencies:
   test: ^1.31.2

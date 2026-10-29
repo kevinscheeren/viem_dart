@@ -61,4 +61,4 @@ export 'src/transports/websocket_transport.dart';
 /// Package version. `melos version` does not touch it: set it by hand to the
 /// `version:` in this package's `pubspec.yaml` when cutting a release
 /// (`docs/release.md`); `test/viem_dart_test.dart` fails if the two differ.
-const String viemDartVersion = '0.1.0';
+const String viemDartVersion = '0.2.0';

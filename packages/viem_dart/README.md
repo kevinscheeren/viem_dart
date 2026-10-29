@@ -75,9 +75,9 @@ npm subpath-export model:
 
 ## Examples
 
-- [`examples/cli_example`](https://github.com/kevinscheeren/viem_dart/tree/production/examples/cli_example) — a pure-Dart CLI over HTTP (balance, `call`, `multicall`, `watchBlocks`)
-- [`examples/flutter_example`](https://github.com/kevinscheeren/viem_dart/tree/production/examples/flutter_example) — a plain Flutter app (mobile/desktop/web+wasm)
-- [`examples/jaspr_example`](https://github.com/kevinscheeren/viem_dart/tree/production/examples/jaspr_example) — a Jaspr client app proving JS/Wasm compile with zero reachable `dart:io`
+- [`examples/cli_example`](https://github.com/wearenotabank/viem_dart/tree/production/examples/cli_example) — a pure-Dart CLI over HTTP (balance, `call`, `multicall`, `watchBlocks`)
+- [`examples/flutter_example`](https://github.com/wearenotabank/viem_dart/tree/production/examples/flutter_example) — a plain Flutter app (mobile/desktop/web+wasm)
+- [`examples/jaspr_example`](https://github.com/wearenotabank/viem_dart/tree/production/examples/jaspr_example) — a Jaspr client app proving JS/Wasm compile with zero reachable `dart:io`
 
 ## Design notes
 
@@ -92,4 +92,4 @@ npm subpath-export model:
   names/messages, so callers can catch a specific failure mode.
 
 See the full source and issue tracker at
-[github.com/kevinscheeren/viem_dart](https://github.com/kevinscheeren/viem_dart).
+[github.com/wearenotabank/viem_dart](https://github.com/wearenotabank/viem_dart).
